@@ -29,9 +29,23 @@ d3.csv("fifa-world-cup.csv", function(error, data) {
                                 .attr("transform", "translate(" + margin + ", 0)")
                                 .call(d3.axisLeft(yScale));
      
-    var updateBars = function(value) {
-        yScale.domain([0, d3.max(data, function(d) { return d[value]; })]);        
+    var updateBars = function(column) {
+        yScale.domain([0, d3.max(data, function(d) { return +d[column]; })]);
         yAxisHandleForUpdate.call(d3.axisLeft(yScale));
+
+        max = d3.max(data, function(d) { return +d[column]; });
+        mean = d3.mean(data, function(d) { return +d[column]; });
+        function colorPicker(value){
+            if(value < mean){ 
+                return "#00C3FF";
+            }
+            else if(value == max){
+                return "#2b2d8c";
+            }
+             else{ 
+                return "#0040FF";
+            }
+        };
 
         var g = d3.select("#bars")
                     .attr("transform", "translate(" + margin + ", 0)");
@@ -42,24 +56,26 @@ d3.csv("fifa-world-cup.csv", function(error, data) {
         bars.enter().append("rect")
              .attr("class", "bar")
              .attr("x", function(d) { return xScale(d.YEAR); })
-             .attr("y", function(d) { return yScale(d[value]); })
+             .attr("y", function(d) { return yScale(d[column]); })
              .attr("width", xScale.bandwidth())
-             .attr("height", function(d) { return height - yScale(d[value]); });
+             .attr("height", function(d) { return height - yScale(d[column]); })
+             .attr("fill", function(d){ return colorPicker(d[column]); });
 
         bars.transition().duration(800)
-             .attr("y", function(d) { return yScale(d[value]); })
-             .attr("height", function(d) { return height - yScale(d[value]); });
+             .attr("y", function(d) { return yScale(d[column]); })
+             .attr("height", function(d) { return height - yScale(d[column]); })
+             .attr("fill", function(d){ return colorPicker(d[column]); });
 
         bars.exit().remove();
     };
 
 
     d3.select("#dataset").on('change', function() {
-        var newData = d3.select(this).property('value').toUpperCase();
-        if (newData == "ATTENDANCE"){
-            newData = "AVERAGE_" + newData;
+        var newColumn = d3.select(this).property('value').toUpperCase();
+        if (newColumn == "ATTENDANCE"){
+            newColumn = "AVERAGE_" + newColumn;
         }    
-        updateBars(newData);
+        updateBars(newColumn);
     });
 
     var initialData = "AVERAGE_ATTENDANCE";
